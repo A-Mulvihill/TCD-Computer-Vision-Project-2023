@@ -9,7 +9,7 @@ dependencies:
   - ca-certificates=2023.11.17=h56e8100_0
   - cuda-version=11.8=h70ddcb2_2
   - cudatoolkit=11.8.0=h09e9e62_12
-  - cudnn=8.8.0.121=h84bb9a4_4
+  - cudnn=8.9.2.26=cuda11_0
   - libffi=3.4.4=hd77b12b_0
   - libzlib=1.2.13=hcfcfb64_5
   - libzlib-wapi=1.2.13=hcfcfb64_5
