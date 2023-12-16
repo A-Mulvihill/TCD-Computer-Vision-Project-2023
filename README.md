@@ -1,8 +1,8 @@
 # TCD-Computer-Vision-Project-2023
 
-This project seeks to implement the Anchor-based Plain Net for Mobile Image Super-Resolution [Du Zongcai, et al. 2021] in Tensorflow 2.10.1 and python 3 on Windows 11 64-bit.
+This project seeks to implement the Anchor-based Plain Net for Mobile Image Super-Resolution [Du Zongcai, et al. 2021] in Tensorflow 2.10.1 and python 3.10.13 on Windows 11 64-bit.
 
-**Please note** that as of the time of writing, the latest Python version is 3.11, the latest Windows OS is 11, and while the latest Tensorflow version is 2.15, versions 2.11 onwards no longer support GPU acceleration on Windows Native. You may use later versions of Python and Tensorflow on Windows with WSL2, or on other operating systems. The provided conda environment files assume native Windows, thus there are separate environments depending on whether you wish to train on GPU or CPU.
+**Please note** that as of the time of writing, the latest Python version is 3.12, the latest Windows OS is 11, and while the latest Tensorflow version is 2.15, versions 2.11 onwards no longer support GPU acceleration on Windows Native. Python 3.11 onwards does not support Tensorflow 2.10 or earlier. You may use later versions of Python and Tensorflow on Windows with WSL2, or on other operating systems. The provided conda environment files assume native Windows, thus there are separate environments depending on whether you wish to train on GPU or CPU. We recommend using GPU if possible, as training on CPU is very slow.
 
 ## Requirements
 
