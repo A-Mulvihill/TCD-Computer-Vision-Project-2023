@@ -1,5 +1,7 @@
 
-# Notes: Will need to use tensorflow keras functional api as the ABRL layer appears to have two inputs
+# Notes: 
+## Will need to use tensorflow keras functional api as the ABRL layer appears to have two inputs
+## Won't use command line options, hardcode values and auto-check for resumption of training
 
 # Network Architecture
 # ====================
