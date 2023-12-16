@@ -5,20 +5,28 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - bzip2=1.0.8=he774522_0
   - ca-certificates=2023.11.17=h56e8100_0
-  - cudatoolkit=11.2.2=h7d7167e_12
-  - cudnn=8.1.0.77=h3e0f4f4_0
+  - cuda-version=11.8=h70ddcb2_2
+  - cudatoolkit=11.8.0=h09e9e62_12
+  - cudnn=8.8.0.121=h84bb9a4_4
+  - libffi=3.4.4=hd77b12b_0
+  - libzlib=1.2.13=hcfcfb64_5
+  - libzlib-wapi=1.2.13=hcfcfb64_5
   - openssl=3.2.0=hcfcfb64_1
-  - pip=23.3.1=py39haa95532_0
-  - python=3.9.18=h1aa4202_0
-  - setuptools=68.2.2=py39haa95532_0
+  - pip=23.3.1=py310haa95532_0
+  - python=3.10.13=he1021f5_0
+  - setuptools=68.2.2=py310haa95532_0
   - sqlite=3.41.2=h2bbff1b_0
+  - tk=8.6.12=h2bbff1b_0
   - tzdata=2023c=h04d1e81_0
   - ucrt=10.0.22621.0=h57928b3_0
   - vc=14.2=h21ff451_1
   - vc14_runtime=14.38.33130=h82b7239_18
   - vs2015_runtime=14.38.33130=hcb4865c_18
-  - wheel=0.41.2=py39haa95532_0
+  - wheel=0.41.2=py310haa95532_0
+  - xz=5.4.5=h8cc25b3_0
+  - zlib=1.2.13=hcfcfb64_5
   - pip:
       - absl-py==2.0.0
       - astunparse==1.6.3
@@ -33,7 +41,6 @@ dependencies:
       - grpcio==1.60.0
       - h5py==3.10.0
       - idna==3.6
-      - importlib-metadata==7.0.0
       - keras==2.10.0
       - keras-preprocessing==1.1.2
       - libclang==16.0.6
@@ -61,5 +68,4 @@ dependencies:
       - urllib3==2.1.0
       - werkzeug==3.0.1
       - wrapt==1.16.0
-      - zipp==3.17.0
 prefix: C:\Users\Michael\miniconda3\envs\tfgpu
