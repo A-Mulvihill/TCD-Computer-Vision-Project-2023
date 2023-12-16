@@ -20,11 +20,12 @@ dependencies:
   - xz=5.4.5=h8cc25b3_0
   - zlib=1.2.13=h8cc25b3_0
   - pip:
-      - absl-py==2.0.0
+      - absl-py==1.4.0
       - astunparse==1.6.3
       - cachetools==5.3.2
       - certifi==2023.11.17
       - charset-normalizer==3.3.2
+      - dm-tree==0.1.8
       - flatbuffers==23.5.26
       - gast==0.5.4
       - google-auth==2.25.2
@@ -40,6 +41,7 @@ dependencies:
       - ml-dtypes==0.2.0
       - numpy==1.26.2
       - oauthlib==3.2.2
+      - opencv-python==4.8.1.78
       - opt-einsum==3.3.0
       - packaging==23.2
       - protobuf==4.23.4
@@ -51,10 +53,12 @@ dependencies:
       - six==1.16.0
       - tensorboard==2.15.1
       - tensorboard-data-server==0.7.2
+      - tensorboardx==2.6.2.2
       - tensorflow==2.15.0
       - tensorflow-estimator==2.15.0
       - tensorflow-intel==2.15.0
       - tensorflow-io-gcs-filesystem==0.31.0
+      - tensorflow-model-optimization==0.7.5
       - termcolor==2.4.0
       - typing-extensions==4.9.0
       - urllib3==2.1.0
