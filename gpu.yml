@@ -8,7 +8,7 @@ dependencies:
   - bzip2=1.0.8=he774522_0
   - ca-certificates=2023.11.17=h56e8100_0
   - cuda-version=11.8=h70ddcb2_2
-  - cudatoolkit=11.8.0=h09e9e62_12
+  - cudatoolkit=11.8.0=hd77b12b_0
   - cudnn=8.9.2.26=cuda11_0
   - libffi=3.4.4=hd77b12b_0
   - libzlib=1.2.13=hcfcfb64_5
