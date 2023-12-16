@@ -22,8 +22,8 @@ See the [Tensorflow 2 installation documentation for your system](https://www.te
 ## Setup
 
 1. Clone this repository
-2. Create a new conda environment with `conda env create -f gpu.yml` OR `conda env create -f cpu.yml` depending on whether you want to use GPU or CPU.
-3. Activate the environment with `conda activate <env>`
+2. Using conda shell, create a new conda environment with `conda env create -f gpu.yml` OR `conda env create -f cpu.yml` depending on whether you want to use GPU or CPU.
+3. Activate the environment with `conda activate tfgpu` OR `conda activate tfcpu`
 4. Verify the conda environment with `conda env list` and `conda info`
 5. Verify CPU support with `python -c "import tensorflow as tf;print(tf.reduce_sum(tf.random.normal([1000, 1000])))"`
 6. Verify GPU support with `python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"`
