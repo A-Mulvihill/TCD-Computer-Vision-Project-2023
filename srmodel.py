@@ -92,4 +92,4 @@ callbacks = [LearningRateScheduler(scheduler)]
 # Model Training
 # ==============
 model.compile(optimizer=Adam(learning_rate=learning_rate), loss=MeanAbsoluteError())
-model.fit(training_data, epochs=num_epochs) # TODO Add in the necessary callbacks for training
+model.fit(training_data, callbacks=callbacks, epochs=num_epochs) # TODO Add in the necessary callbacks for training
