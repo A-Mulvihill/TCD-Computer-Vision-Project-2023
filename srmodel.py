@@ -25,19 +25,37 @@ from tensorboardX import SummaryWriter
 
 # Important Values
 # ================
+
+# Network settings
 conv_kernel_size = 3
 num_deep_feature_layers = 5
+num_kernels = 28
+
+# Training settings general
 training_batch_size = 16
 lr_image_size = (64, 64)
-learning_rate = 0.001 # halves per 200 epochs for 1000 epochs
+
+# Initial training settings
+learning_rate = 0.001
+lr_reduction_interval = 200
 num_epochs = 1000
-num_kernels = 28
-qat_learning_rate = 0.0001 # halves per 50 epochs for for 200 epochs
+
+# QAT settings
+qat_learning_rate = 0.0001
+qat_lr_reduction_interval = 50
 qat_num_epochs = 200
 
+# Data
 training_data = [] # TODO Get the data here
 
 # Scale is assumed to be hardcoded at 3 for now, this could be changed though
+
+# Callbacks
+# =========
+def scheduler(epoch, lr):
+    if epoch % lr_reduction_interval == 0:
+        lr = lr*0.5
+    return lr
 
 # Network Architecture
 # ====================
@@ -68,6 +86,8 @@ outputs = K.clip(x, 0., 255.)
 model = Model(inputs=inputs, outputs=outputs, name='anchor_based_plain_net')
 
 model.summary()
+
+callbacks = [LearningRateScheduler(scheduler)]
 
 # Model Training
 # ==============
