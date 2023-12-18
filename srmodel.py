@@ -1,3 +1,4 @@
+import argparse
 import logging
 import tensorflow as tf
 import keras.backend as K
@@ -140,7 +141,7 @@ def scheduler(epoch, lr):
         lr = lr*0.5
     return lr
 
-def train():
+def new_model_train():
     model = ABmodel() 
     model.compile(optimizer=Adam(learning_rate=learning_rate), loss=MeanAbsoluteError())
     model.fit(training_data, callbacks=[LearningRateScheduler(scheduler)], epochs=num_epochs)
@@ -173,12 +174,17 @@ def qat_train(model_path):
     model = load_model(model_path)
     model = clone_model(model, clone_function=qat_helper)
     model = tfmot.quantization.keras.quantize_annotate_model(model)
-    dts = tf.nn.depth_to_space(x, 3)
+    dts = Lambda(lambda x: tf.nn.depth_to_space(x, 3))
     with tfmot.quantization.keras.quantize_scope({'NoOpQuantizeConfig': NoOpQuantizeConfig, 'depth_to_space': dts, 'tf': tf}):
         model = tfmot.quantization.keras.quantize_apply(model)
     model.compile(optimizer=Adam(learning_rate=qat_learning_rate), loss=MeanAbsoluteError())
-    model.fit(training_data, callbacks=[LearningRateScheduler(scheduler)], epochs=num_epochs)
+    model.fit(training_data, callbacks=[LearningRateScheduler(qat_scheduler)], epochs=qat_num_epochs)
 
 if __name__ == "__main__":
-    model = ABmodel()
-    model.summary()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-q', default=None) # flags if we want to do quantization training, followed by the path to the model file
+    args = parser.parse_args()
+    if args.q == None:
+        new_model_train()
+    else:
+        qat_train(args.q)
