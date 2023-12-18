@@ -54,6 +54,10 @@ validation_data = Data('valid')
 
 # Scale is assumed to be hardcoded at 3 for now, this could be changed though
 
+# Model Paths
+model_path = "./model"
+qat_model_path = "./qat_model"
+
 # Network Architecture
 # ====================
 
@@ -86,6 +90,42 @@ def ABmodel():
 # Model Training
 # ==============
 
+class validation_callback(Callback):
+    def __init__(self, validation_data, training_data, save_path):
+        super(validation_callback, self).__init__()
+        self.validation_data = validation_data
+        self.training_data = training_data
+        self.save_path = save_path
+        self.best_psnr = -1
+
+    def on_epoch_end(self, epoch, logs):
+        psnr = 0.0
+        for _, (lr, hr) in enumerate(self.validation_data):
+            sr = self.model(lr)
+            sr_numpy = K.eval(sr)
+            psnr += self.calc_psnr((sr_numpy).squeeze(), (hr).squeeze())
+        psnr = round(psnr / len(self.validation_data), 4)
+
+        # save best status
+        if psnr >= self.best_psnr:
+            self.best_psnr = psnr
+            self.model.save(self.save_path, overwrite=True, include_optimizer=True, save_format='tf')
+
+
+    def calc_psnr(self, y, y_target):
+        h, w, c = y.shape
+        y = np.clip(np.round(y), 0, 255).astype(np.float32)
+        y_target = np.clip(np.round(y_target), 0, 255).astype(np.float32)
+
+        # crop 1
+        y_cropped = y[1:h-1, 1:w-1, :]
+        y_target_cropped = y_target[1:h-1, 1:w-1, :]
+        
+        mse = np.mean((y_cropped - y_target_cropped) ** 2)
+        if mse == 0:
+            return 100
+        return 20. * math.log10(255. / math.sqrt(mse))
+
 def scheduler(epoch, lr):
     if epoch % lr_reduction_interval == 0:
         lr = lr*0.5
@@ -94,8 +134,14 @@ def scheduler(epoch, lr):
 def new_model_train():
     model = ABmodel() 
     model.compile(optimizer=Adam(learning_rate=learning_rate), loss=MeanAbsoluteError())
-    model.fit(training_data, callbacks=[LearningRateScheduler(scheduler)], epochs=num_epochs)
-    model.save("model", include_optimizer=True, save_format='tf')
+    model.fit(
+        training_data,
+        callbacks=[
+            LearningRateScheduler(scheduler),
+            validation_callback(validation_data, training_data, model_path)
+        ],
+        epochs=qat_num_epochs
+    )
 
 class NoOpQuantizeConfig(tfmot.quantization.keras.QuantizeConfig):
     def get_weights_and_quantizers(self, layer):
@@ -121,7 +167,7 @@ def qat_scheduler(epoch, lr):
         lr = lr*0.5
     return lr
 
-def qat_train(model_path):
+def qat_train():
     model = load_model(model_path)
     model = clone_model(model, clone_function=qat_helper)
     model = tfmot.quantization.keras.quantize_annotate_model(model)
@@ -129,14 +175,20 @@ def qat_train(model_path):
     with tfmot.quantization.keras.quantize_scope({'NoOpQuantizeConfig': NoOpQuantizeConfig, 'depth_to_space': dts, 'tf': tf}):
         model = tfmot.quantization.keras.quantize_apply(model)
     model.compile(optimizer=Adam(learning_rate=qat_learning_rate), loss=MeanAbsoluteError())
-    model.fit(training_data, callbacks=[LearningRateScheduler(qat_scheduler)], epochs=qat_num_epochs)
-    model.save("qat_model", include_optimizer=True, save_format='tf')
+    model.fit(
+        training_data,
+        callbacks=[
+            LearningRateScheduler(qat_scheduler),
+            validation_callback(validation_data, training_data, qat_model_path)
+        ],
+        epochs=qat_num_epochs
+    )
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-q', default=None) # flags if we want to do quantization training, followed by the path to the model file
+    parser.add_argument('-q', action='store_true', default=False) # flags if we want to do quantization training, requires a model to have been created
     args = parser.parse_args()
-    if args.q == None:
-        new_model_train()
+    if args.q:
+        qat_train()
     else:
-        qat_train(args.q)
+        new_model_train()
