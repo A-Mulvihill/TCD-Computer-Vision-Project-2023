@@ -42,7 +42,7 @@ class Data(tf.keras.utils.Sequence): # tf.keras.utils.Sequence is a base class f
 		print('Done!')
 
 	# .pt files ostensibly load faster than .png files
-	def png2pt(path, pt_path, namelist):
+	def png2pt(self, path, pt_path, namelist):
 		pngs = os.listdir(path)
 		if os.path.exists(pt_path):
 			# Check if the directory has all pt files with proper names
@@ -76,8 +76,8 @@ class Data(tf.keras.utils.Sequence): # tf.keras.utils.Sequence is a base class f
 		else:
 			return len(self.hrlist)
 		
-	def __getitem__(self, idx):
-		start = (idx * self.batch_size) 
+	def __getitem__(self, index):
+		start = (index * self.batch_size) 
 		end = start + self.batch_size
 		if self.split == 'train':
 			lr_batch = np.zeros((self.batch_size, self.patch_size, self.patch_size, 3), dtype=np.float32)
@@ -87,17 +87,17 @@ class Data(tf.keras.utils.Sequence): # tf.keras.utils.Sequence is a base class f
 			lr_batch[i - start] = lr
 			hr_batch[i - start] = hr
 		else:
-			lr, hr = self.get_image_pair(idx)
+			lr, hr = self.get_image_pair(index)
 			lr_batch, hr_batch = np.expand_dims(lr, 0), np.expand_dims(hr, 0)
 		return (lr_batch).astype(np.float32), (hr_batch).astype(np.float32)
 	
 	# functions called internally by __getitem__()
 	# ============================================
-	def get_image_pair(self, idx):
-		full_hrpath = osp.join(self.hrpath, self.hrlist[idx])
-		base, ext = osp.splitext(self.hrlist[idx])
-		lr_basename = base + 'x{}'.format(self.scale) + '.pt'
-		full_lrpath = osp.join(self.lrpath, lr_basename)
+	def get_image_pair(self, index):
+		full_hrpath = osp.join(self.pt_pathhr, self.hrlist[index])
+		base, ext = osp.splitext(self.hrlist[index])
+		lr_basename = base + 'x3.pt'
+		full_lrpath = osp.join(self.pt_pathlr, lr_basename)
 		# Read the images
 		with open(full_hrpath, 'rb') as f:
 			hr = pickle.load(f)
