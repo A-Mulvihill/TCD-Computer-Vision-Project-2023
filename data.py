@@ -131,4 +131,4 @@ class Data(tf.keras.utils.Sequence): # tf.keras.utils.Sequence is a base class f
 		if rot90:
 			lr = lr.transpose(1, 0, 2)
 			hr = hr.transpose(1, 0, 2)
-			return lr, hr
+		return lr, hr
