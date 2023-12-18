@@ -24,6 +24,33 @@ from tensorboardX import SummaryWriter
 ## Will need to use tensorflow keras functional api as the ABRL layer appears to have two inputs
 ## Won't use command line options, hardcode values and auto-check for resumption of training
 
+# Helper Functions
+# ================
+
+# .pt files ostensibly load faster than .png files
+def png2pt(path, pt_path, namelist):
+	pngs = os.listdir(path)
+	if os.path.exists(pt_path):
+		# Check if the directory has all pt files with proper names
+		pt_files = os.listdir(pt_path)
+		for name in namelist:
+			if name not in pt_files:
+				break # Missing file, need to convert
+			return # All files are present, no need to convert
+	# Create the directory if it doesn't exist
+	if not os.path.exists(pt_path):
+		os.makedirs(pt_path)
+	# Convert the images to .pt
+	for png in pngs:
+		base, ext = os.path.splitext(png)
+		if ext == '.png':
+			src = os.path.join(path, png)
+			dst = os.path.join(pt_path, base + '.pt')
+			with open(dst, 'wb') as f:
+				img = cv2.imread(src)
+				img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+				pickle.dump(img, f)
+
 # Important Values
 # ================
 
@@ -46,8 +73,33 @@ qat_learning_rate = 0.0001
 qat_lr_reduction_interval = 50
 qat_num_epochs = 200
 
+# Data pre-processing
+hrpath_t = 'data/DIV2K_train_HR'
+hrpath_v = 'data/DIV2K_valid_HR'
+lrpath_t = 'data/DIV2K_train_LR_bicubic/X3'
+lrpath_v = 'data/DIV2K_valid_LR_bicubic/X3'
+pt_pathhr = 'data/DIV2K_HR_pt'
+pt_pathlr = 'data/DIV2K_LR_pt'
+trainlisthr = ['%04d.pt' % i for i in range(1, 801)] # '0001.pt' to '0800.pt'
+validlisthr = ['%04d.pt' % i for i in range(801, 901)] # '0801.pt' to '0900.pt'
+trainlistlr = ['%04dx3.pt' % i for i in range(1, 801)] # '0001x3.pt' to '0800x3.pt'
+validlistlr = ['%04dx3.pt' % i for i in range(801, 901)] # '0801x3.pt' to '0900x3.pt'
+print('Converting images to .pt format...')
+png2pt(hrpath_t, pt_pathhr, trainlisthr)
+png2pt(hrpath_v, pt_pathhr, validlisthr)
+png2pt(lrpath_t, pt_pathlr, trainlistlr)
+png2pt(lrpath_v, pt_pathlr, validlistlr)
+print('Done!')
+
 # Data
-training_data = [] # TODO Get the data here
+training_data = {
+	'hrpath': pt_pathhr,
+	'lrpath': pt_pathlr,
+	'trainlisthr': trainlisthr,
+	'trainlistlr': trainlistlr,
+	'validlisthr': validlisthr,
+	'validlistlr': validlistlr,
+}
 
 # Scale is assumed to be hardcoded at 3 for now, this could be changed though
 
