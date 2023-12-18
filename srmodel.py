@@ -5,7 +5,7 @@ import keras.backend as K
 from keras.callbacks import Callback, LearningRateScheduler
 from keras.layers import Conv2D, Input, Lambda, Add
 from keras.models import Model
-from keras.initializers import glorot_normal
+from keras.initializers import he_normal
 from keras.optimizers import Adam
 from keras.losses import MeanAbsoluteError
 from keras.models import load_model, clone_model
@@ -67,14 +67,14 @@ def ABmodel():
     upsampled = tf.concat([inputs]*(3**2), axis=3)
 
     # Shallow Feature Extraction, single 3x3 Convolution layer followed by ReLU
-    x = Conv2D(num_kernels, conv_kernel_size, activation='relu', padding='same')(inputs)
+    x = Conv2D(num_kernels, conv_kernel_size, activation='relu', kernel_initializer=he_normal(), padding='same')(inputs)
 
     # Deep Feature Extraction, 5 layers of 3x3 Convolution layers paired with ReLUs
     for _ in range(num_deep_feature_layers):
-        x = Conv2D(num_kernels, conv_kernel_size, activation='relu', padding='same')(x)
+        x = Conv2D(num_kernels, conv_kernel_size, activation='relu', kernel_initializer=he_normal(), padding='same')(x)
 
     # Transfer features to HR image space, one convolution layer (Assume from the paper's figure it is 3x3 conv)
-    x = Conv2D(3*(3**2), conv_kernel_size, padding='same')(x) # This layer needs to have an output with the same shape as upsampled
+    x = Conv2D(3*(3**2), conv_kernel_size, kernel_initializer=he_normal(), padding='same')(x) # This layer needs to have an output with the same shape as upsampled
 
     # Apply ABRL
     x = Add()([upsampled, x])
