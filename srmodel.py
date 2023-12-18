@@ -145,6 +145,7 @@ def new_model_train():
     model = ABmodel() 
     model.compile(optimizer=Adam(learning_rate=learning_rate), loss=MeanAbsoluteError())
     model.fit(training_data, callbacks=[LearningRateScheduler(scheduler)], epochs=num_epochs)
+    model.save("model", include_optimizer=True, save_format='tf')
 
 class NoOpQuantizeConfig(tfmot.quantization.keras.QuantizeConfig):
     def get_weights_and_quantizers(self, layer):
@@ -179,6 +180,7 @@ def qat_train(model_path):
         model = tfmot.quantization.keras.quantize_apply(model)
     model.compile(optimizer=Adam(learning_rate=qat_learning_rate), loss=MeanAbsoluteError())
     model.fit(training_data, callbacks=[LearningRateScheduler(qat_scheduler)], epochs=qat_num_epochs)
+    model.save("qat_model", include_optimizer=True, save_format='tf')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
