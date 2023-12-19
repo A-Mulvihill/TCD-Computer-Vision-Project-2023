@@ -129,7 +129,8 @@ def new_model_train():
 			LearningRateScheduler(scheduler),
 			validation_callback(validation_data, training_data, model_path)
 		],
-		epochs=qat_num_epochs
+		epochs=qat_num_epochs,
+		workers=8
 	)
 
 class NoOpQuantizeConfig(tfmot.quantization.keras.QuantizeConfig):
