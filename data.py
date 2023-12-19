@@ -16,11 +16,11 @@ class Data(tf.keras.utils.Sequence): # tf.keras.utils.Sequence is a base class f
 		self.split = split
 		self.pt_pathhr = 'data/DIV2K_HR_pt'
 		self.pt_pathlr = 'data/DIV2K_LR_pt'
-		self.hrpath = 'data/DIV2K_train_HR'
-		self.lrpath = 'data/DIV2K_train_LR_bicubic/X3'
 
 		if split == 'train':
 			print('Converting training images to .pt format...')
+			self.hrpath = 'data/DIV2K_train_HR'
+			self.lrpath = 'data/DIV2K_train_LR_bicubic/X3'
 			self.flip = True
 			self.rot = True
 			self.enlarge_times = 20
@@ -29,6 +29,8 @@ class Data(tf.keras.utils.Sequence): # tf.keras.utils.Sequence is a base class f
 
 		else: # split == 'valid'
 			print('Converting validation images to .pt format...')
+			self.hrpath = 'data/DIV2K_valid_HR'
+			self.lrpath = 'data/DIV2K_valid_LR_bicubic/X3'
 			self.flip = None
 			self.rot = None
 			self.enlarge_times = 1
