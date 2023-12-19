@@ -115,8 +115,8 @@ class validation_callback(Callback):
 			pickle.dump(state, f)
 
 		# save tensorboard
-		self.tbx.add_scalar('psnr', psnr, epoch)
-		self.tbx.add_scalar('loss', loss, epoch)
+		self.tbx.add_scalar('psnr', psnr, epoch+1)
+		self.tbx.add_scalar('loss', loss, epoch+1)
 
 
 	def calc_psnr(self, y, y_target):
