@@ -163,13 +163,16 @@ def qat_scheduler(epoch, lr):
 	return lr
 
 def qat_train():
-	model = load_model(model_path)
-	model = clone_model(model, clone_function=qat_helper)
-	model = tfmot.quantization.keras.quantize_annotate_model(model)
-	dts = Lambda(lambda x: tf.nn.depth_to_space(x, 3))
-	with tfmot.quantization.keras.quantize_scope({'NoOpQuantizeConfig': NoOpQuantizeConfig, 'depth_to_space': dts, 'tf': tf}):
-		model = tfmot.quantization.keras.quantize_apply(model)
-	model.compile(optimizer=Adam(learning_rate=qat_learning_rate), loss=MeanAbsoluteError())
+	if os.path.exists(qat_model_path):
+		model = load_model(qat_model_path)
+	else:
+		model = load_model(model_path)
+		model = clone_model(model, clone_function=qat_helper)
+		model = tfmot.quantization.keras.quantize_annotate_model(model)
+		dts = Lambda(lambda x: tf.nn.depth_to_space(x, 3))
+		with tfmot.quantization.keras.quantize_scope({'NoOpQuantizeConfig': NoOpQuantizeConfig, 'depth_to_space': dts, 'tf': tf}):
+			model = tfmot.quantization.keras.quantize_apply(model)
+		model.compile(optimizer=Adam(learning_rate=qat_learning_rate), loss=MeanAbsoluteError())
 	model.fit(
 		training_data,
 		callbacks=[
