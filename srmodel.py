@@ -11,8 +11,13 @@ from keras.models import load_model, clone_model
 import tensorflow_model_optimization as tfmot
 import numpy as np
 import math
-import os.path as osp
+import os
+import absl.logging as al
 from data import Data
+
+# disable unnecessarily verbose warnings
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+al.set_verbosity(al.ERROR)
 
 # Important Values
 # ================
@@ -119,7 +124,7 @@ def scheduler(epoch, lr):
 
 def new_model_train():
 	model = ABmodel()
-	if osp.exists(model_path):
+	if os.path.exists(model_path):
 		model = load_model(model_path)
 	else:
 		model.compile(optimizer=Adam(learning_rate=learning_rate), loss=MeanAbsoluteError())
