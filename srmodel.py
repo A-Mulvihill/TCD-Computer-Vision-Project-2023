@@ -11,6 +11,7 @@ from keras.models import load_model, clone_model
 import tensorflow_model_optimization as tfmot
 import numpy as np
 import math
+import os.path as osp
 from data import Data
 
 # Important Values
@@ -117,8 +118,11 @@ def scheduler(epoch, lr):
 	return lr
 
 def new_model_train():
-	model = ABmodel() 
-	model.compile(optimizer=Adam(learning_rate=learning_rate), loss=MeanAbsoluteError())
+	model = ABmodel()
+	if osp.exists(model_path):
+		model = load_model(model_path)
+	else:
+		model.compile(optimizer=Adam(learning_rate=learning_rate), loss=MeanAbsoluteError())
 	model.fit(
 		training_data,
 		callbacks=[
