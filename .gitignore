@@ -3,6 +3,9 @@
 venv/
 __pycache__/
 visual/
-*.log
+log/
 *.png
 *.pt
+*.pkl
+*.pb
+variables.*
