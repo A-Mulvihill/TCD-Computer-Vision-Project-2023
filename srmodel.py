@@ -1,5 +1,4 @@
 import argparse
-import logging
 import tensorflow as tf
 import keras.backend as K
 from keras.callbacks import Callback, LearningRateScheduler
@@ -12,19 +11,7 @@ from keras.models import load_model, clone_model
 import tensorflow_model_optimization as tfmot
 import numpy as np
 import math
-import pickle
-import os
-import sys
-import time
-import shutil
-import cv2
-import random
-from tensorboardX import SummaryWriter
 from data import Data
-
-# Notes: 
-## Will need to use tensorflow keras functional api as the ABRL layer appears to have two inputs
-## Won't use command line options, hardcode values and auto-check for resumption of training
 
 # Important Values
 # ================
@@ -51,8 +38,6 @@ qat_num_epochs = 200
 # Data
 training_data = Data('train')
 validation_data = Data('valid')
-
-# Scale is assumed to be hardcoded at 3 for now, this could be changed though
 
 # Model Paths
 model_path = "./model"
