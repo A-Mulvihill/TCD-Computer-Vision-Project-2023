@@ -84,10 +84,10 @@ class Data(tf.keras.utils.Sequence): # tf.keras.utils.Sequence is a base class f
 		if self.split == 'train':
 			lr_batch = np.zeros((self.batch_size, self.patch_size, self.patch_size, 3), dtype=np.float32)
 			hr_batch = np.zeros((self.batch_size, self.patch_size * self.scale, self.patch_size * self.scale, 3), dtype=np.float32)
-		for i in range(start, end):
-			lr, hr = self.get_image_pair(i % len(self.hrlist))
-			lr_batch[i - start] = lr
-			hr_batch[i - start] = hr
+			for i in range(start, end):
+				lr, hr = self.get_image_pair(i % len(self.hrlist))
+				lr_batch[i - start] = lr
+				hr_batch[i - start] = hr
 		else:
 			lr, hr = self.get_image_pair(index)
 			lr_batch, hr_batch = np.expand_dims(lr, 0), np.expand_dims(hr, 0)
