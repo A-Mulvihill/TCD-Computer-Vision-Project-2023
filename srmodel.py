@@ -11,9 +11,12 @@ from keras.models import load_model, clone_model
 import tensorflow_model_optimization as tfmot
 import numpy as np
 import math
+import shutil
 import os
+import pickle
 import absl.logging as al
 from data import Data
+from tensorboardX import SummaryWriter
 
 # disable unnecessarily verbose warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -82,12 +85,14 @@ def ABmodel():
 # ==============
 
 class validation_callback(Callback):
-	def __init__(self, validation_data, training_data, save_path):
+	def __init__(self, validation_data, training_data, save_path, tbx, state):
 		super(validation_callback, self).__init__()
 		self.validation_data = validation_data
 		self.training_data = training_data
 		self.save_path = save_path
-		self.best_psnr = -1
+		self.tbx = tbx
+		self.best_epoch = state['best_epoch']
+		self.best_psnr = state['best_psnr']
 
 	def on_epoch_end(self, epoch, logs):
 		psnr = 0.0
@@ -96,11 +101,22 @@ class validation_callback(Callback):
 			sr_numpy = K.eval(sr)
 			psnr += self.calc_psnr((sr_numpy).squeeze(), (hr).squeeze())
 		psnr = round(psnr / len(self.validation_data), 4)
+		loss = round(logs['loss'], 4)
 
 		# save best status
 		if psnr >= self.best_psnr:
 			self.best_psnr = psnr
+			self.best_epoch = epoch
 			self.model.save(self.save_path, overwrite=True, include_optimizer=True, save_format='tf')
+		state = {'cur_epoch': epoch, 'best_epoch': self.best_epoch, 'best_psnr': self.best_psnr}
+		if not os.path.exists(self.save_path + '/state.pkl'):
+			open(self.save_path + '/state.pkl', 'a').close()
+		with open(self.save_path + '/state.pkl', 'wb') as f:
+			pickle.dump(state, f)
+
+		# save tensorboard
+		self.tbx.add_scalar('psnr', psnr, epoch)
+		self.tbx.add_scalar('loss', loss, epoch)
 
 
 	def calc_psnr(self, y, y_target):
@@ -122,19 +138,30 @@ def scheduler(epoch, lr):
 		lr = lr*0.5
 	return lr
 
-def new_model_train():
+def new_model_train(log_path):
+	state = {'cur_epoch': -1, 'best_epoch': -1, 'best_psnr': -1}
 	model = ABmodel()
-	if os.path.exists(model_path):
+	if os.path.exists(model_path) and os.path.exists(log_path):
+		tbx_writer = SummaryWriter(log_path)
 		model = load_model(model_path)
+		with open(model_path + '/state.pkl', 'rb') as f:
+			state = pickle.load(f)
 	else:
+		if os.path.exists(log_path):
+			shutil.rmtree(log_path)
+		os.makedirs(log_path)
+		if os.path.exists(model_path):
+			shutil.rmtree(model_path)
+		tbx_writer = SummaryWriter(log_path)
 		model.compile(optimizer=Adam(learning_rate=learning_rate), loss=MeanAbsoluteError())
 	model.fit(
 		training_data,
 		callbacks=[
 			LearningRateScheduler(scheduler),
-			validation_callback(validation_data, training_data, model_path)
+			validation_callback(validation_data, training_data, model_path, tbx_writer, state)
 		],
-		epochs=qat_num_epochs,
+		epochs=num_epochs,
+		initial_epoch=state['cur_epoch']+1,
 		workers=8
 	)
 
@@ -162,10 +189,20 @@ def qat_scheduler(epoch, lr):
 		lr = lr*0.5
 	return lr
 
-def qat_train():
-	if os.path.exists(qat_model_path):
+def qat_train(log_path):
+	state = {'cur_epoch': -1, 'best_epoch': -1, 'best_psnr': -1}
+	if os.path.exists(qat_model_path) and os.path.exists(log_path):
+		tbx_writer = SummaryWriter(log_path)
 		model = load_model(qat_model_path)
+		with open(qat_model_path + '/state.pkl', 'rb') as f:
+			state = pickle.load(f)
 	else:
+		if os.path.exists(log_path):
+			shutil.rmtree(log_path)
+		os.makedirs(log_path)
+		tbx_writer = SummaryWriter(log_path)
+		if os.path.exists(qat_model_path):
+			shutil.rmtree(qat_model_path)
 		model = load_model(model_path)
 		model = clone_model(model, clone_function=qat_helper)
 		model = tfmot.quantization.keras.quantize_annotate_model(model)
@@ -177,9 +214,11 @@ def qat_train():
 		training_data,
 		callbacks=[
 			LearningRateScheduler(qat_scheduler),
-			validation_callback(validation_data, training_data, qat_model_path)
+			validation_callback(validation_data, training_data, qat_model_path, tbx_writer, state)
 		],
-		epochs=qat_num_epochs
+		epochs=qat_num_epochs,
+		initial_epoch=state['cur_epoch']+1,
+		workers=8
 	)
 
 if __name__ == "__main__":
@@ -187,6 +226,6 @@ if __name__ == "__main__":
 	parser.add_argument('-q', action='store_true', default=False) # flags if we want to do quantization training, requires a model to have been created
 	args = parser.parse_args()
 	if args.q:
-		qat_train()
+		qat_train('log/qat_model_tbx')
 	else:
-		new_model_train()
+		new_model_train('log/model_tbx')
