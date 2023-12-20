@@ -3,7 +3,6 @@ import tensorflow as tf
 import cv2
 import random
 import os
-import os.path as osp
 import pickle
 
 class Data(tf.keras.utils.Sequence): # tf.keras.utils.Sequence is a base class for fitting to a sequence of data, such as a dataset
@@ -96,10 +95,10 @@ class Data(tf.keras.utils.Sequence): # tf.keras.utils.Sequence is a base class f
 	# functions called internally by __getitem__()
 	# ============================================
 	def get_image_pair(self, index):
-		full_hrpath = osp.join(self.pt_pathhr, self.hrlist[index])
-		base, ext = osp.splitext(self.hrlist[index])
+		full_hrpath = os.path.join(self.pt_pathhr, self.hrlist[index])
+		base, _ = os.path.splitext(self.hrlist[index])
 		lr_basename = base + 'x3.pt'
-		full_lrpath = osp.join(self.pt_pathlr, lr_basename)
+		full_lrpath = os.path.join(self.pt_pathlr, lr_basename)
 		# Read the images
 		with open(full_hrpath, 'rb') as f:
 			hr = pickle.load(f)
