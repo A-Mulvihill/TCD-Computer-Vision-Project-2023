@@ -9,6 +9,7 @@ from keras.optimizers import Adam
 from keras.losses import MeanAbsoluteError
 from keras.models import load_model, clone_model
 import tensorflow_model_optimization as tfmot
+import cv2
 import numpy as np
 import math
 import shutil
@@ -48,9 +49,11 @@ qat_num_epochs = 200
 training_data = Data('train')
 validation_data = Data('valid')
 
-# Model Paths
-model_path = "./model"
-qat_model_path = "./qat_model"
+# Paths
+model_path = './model'
+qat_model_path = './qat_model'
+eval_path = './qat_model/eval'
+tflite_path = './qat_model/quantized.tflite'
 
 # Network Architecture
 # ====================
@@ -221,11 +224,78 @@ def qat_train(log_path):
 		workers=8
 	)
 
-if __name__ == "__main__":
+# Model Quantization
+# ==================
+	
+# set up representative data (one image) for quantization (min. size 360x640, 360p)
+def rep_data():
+	lr_img_path = 'data/DIV2K_LR_pt/0001x3.pt'
+	with open(lr_img_path, 'rb') as f:
+		lr_img = pickle.load(f)
+	lr_img = lr_img.astype(np.float32)
+	lr_img = np.expand_dims(lr_img, 0)
+	if lr_img.shape[1] >=360 and lr_img.shape[2] >= 640:
+		yield [lr_img[:, 0:360, 0:640, :]]
+
+# generate tflite file from qat model (quantized, properly sized), this is the final model and will be used for evaluation and benchmarking
+def gen_tflite(qat_p, tflite_p):
+	tnsr_shp = [1, 360, 640, 3] # model will super resolve 360p images to 1080p (3x)
+	gen_rep = rep_data()
+	qat_model = tf.saved_model.load(qat_p)
+	conc = qat_model.signatures[tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+	conc.inputs[0].set_shape(tnsr_shp)
+	conv = tf.lite.TFLiteConverter.from_conc_functions([conc])
+	conv.experimental_new_converter = True
+	conv.experimental_new_quantizer = True
+	conv.optimizations = [tf.lite.Optimize.DEFAULT]
+	conv.representative_dataset = gen_rep
+	conv.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+	conv.inference_input_type = tf.uint8
+	conv.inference_output_type = tf.uint8
+	tfl = conv.convert()
+	with open(tflite_p, 'wb') as f:
+		f.write(tfl)
+
+def eval(tflite_p, eval_p):
+	inter = tf.lite.Interpreter(model_path=tflite_p)
+	total_psnr = 0.0
+	for i in range(801, 901):
+		print(f'Evaluating using image {i}')
+		lr_p = f'data/DIV2K_LR_pt/0{i}x3.pt'
+		with open(lr_p, 'rb') as f:
+			lr = pickle.load(f)
+		lr = np.expand_dims(lr, 0).astype(np.float32)
+		lr = lr.astype(np.uint8)
+		hr_p = f'data/DIV2K_HR_pt/0{i}.pt'
+		with open(hr_p, 'rb') as f:
+			hr = pickle.load(f)
+		hr = np.expand_dims(hr, 0).astype(np.float32)
+		inter.resize_tensor_input(inter.get_input_details()[0]['index'], lr.shape)
+		inter.allocate_tensors()
+		inter.set_tensor(inter.get_input_details()[0]['index'], lr)
+		inter.invoke()
+		sr = inter.get_tensor(inter.get_output_details()[0]['index'])
+		sr = np.clip(sr, 0, 255)
+		_, h, w, _ = sr.shape
+		out_png = os.path.join(eval_p, '{:04d}x3.png'.format(i))
+		cv2.imwrite(out_png, cv2.cvtColor(sr.squeeze().astype(np.uint8), cv2.COLOR_RGB2BGR))
+		mse = np.mean((sr[:, 1:h-1, 1:w-1, :].astype(np.float32) - hr[:, 1:h-1, 1:w-1, :].astype(np.float32)) ** 2)
+		psnr =  20. * math.log10(255. / math.sqrt(mse))
+		total_psnr += psnr
+	print("Average PSNR:" + total_psnr / 100)
+
+if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-q', action='store_true', default=False) # flags if we want to do quantization training, requires a model to have been created
+	parser.add_argument('-q', action='store_true', default=False) # flag if we want to do quantization training, requires a model to have been created
+	parser.add_argument('-g' , action='store_true', default=False) # flag to generate tflite file by quantizing the qat model
 	args = parser.parse_args()
-	if args.q:
+	if args.g:
+		print('Quantization: Generating TFLite file')
+		gen_tflite(qat_model_path, tflite_path)
+		eval(tflite_path, eval_path)
+	elif args.q:
+		print('Quantization Aware Training')
 		qat_train('log/qat_model_tbx')
 	else:
+		print('Preliminary Training')
 		new_model_train('log/model_tbx')
