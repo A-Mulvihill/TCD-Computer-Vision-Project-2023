@@ -58,7 +58,8 @@ qat_model_path = "./qat_model"
 def ABmodel():
 	# Input
 	inputs = Input(shape=(None, None, 3))
-	upsampled = tf.concat([inputs]*(3**2), axis=3)
+	upsample_lambda = Lambda(lambda x: tf.concat(x, axis=3))
+	upsampled = upsample_lambda([inputs]*(3**2))
 
 	# Shallow Feature Extraction, single 3x3 Convolution layer followed by ReLU
 	x = Conv2D(num_kernels, conv_kernel_size, activation='relu', kernel_initializer=he_normal(), padding='same')(inputs)
@@ -74,10 +75,12 @@ def ABmodel():
 	x = Add()([upsampled, x])
 
 	# Reshuffle Pixels, labelled as depth to space in paper's figure
-	x = tf.nn.depth_to_space(x, 3)
+	dts_lambda = Lambda(lambda x: tf.nn.depth_to_space(x, 3))
+	x = dts_lambda(x)
 
 	# Clip node to restrict pixel values to the range 0 to 255, this gives final output
-	outputs = K.clip(x, 0., 255.)
+	clip_lambda = Lambda(lambda x: K.clip(x, 0., 255.))
+	outputs = clip_lambda(x)
 
 	return Model(inputs=inputs, outputs=outputs, name='anchor_based_plain_net')
 
@@ -180,7 +183,7 @@ class NoOpQuantizeConfig(tfmot.quantization.keras.QuantizeConfig):
 		return {}
 
 def qat_helper(layer):
-	if 'concat' in layer.name or 'depth' in layer.name or 'clip' in layer.name:
+	if 'lambda' in layer.name:
 		return tfmot.quantization.keras.quantize_annotate_layer(layer, quantize_config=NoOpQuantizeConfig())
 	return layer
 
