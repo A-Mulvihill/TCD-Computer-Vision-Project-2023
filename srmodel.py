@@ -243,11 +243,11 @@ def rep_data():
 # generate tflite file from qat model (quantized, properly sized), this is the final model and will be used for evaluation and benchmarking
 def gen_tflite(qat_p, tflite_p):
 	tnsr_shp = [1, 360, 640, 3] # model will super resolve 360p images to 1080p (3x)
-	gen_rep = rep_data()
+	gen_rep = rep_data
 	qat_model = tf.saved_model.load(qat_p)
 	conc = qat_model.signatures[tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
 	conc.inputs[0].set_shape(tnsr_shp)
-	conv = tf.lite.TFLiteConverter.from_conc_functions([conc])
+	conv = tf.lite.TFLiteConverter.from_concrete_functions([conc])
 	conv.experimental_new_converter = True
 	conv.experimental_new_quantizer = True
 	conv.optimizations = [tf.lite.Optimize.DEFAULT]
@@ -285,7 +285,7 @@ def eval(tflite_p, eval_p):
 		mse = np.mean((sr[:, 1:h-1, 1:w-1, :].astype(np.float32) - hr[:, 1:h-1, 1:w-1, :].astype(np.float32)) ** 2)
 		psnr =  20. * math.log10(255. / math.sqrt(mse))
 		total_psnr += psnr
-	print("Average PSNR:" + total_psnr / 100)
+	print(f'Average PSNR: {total_psnr / 100}')
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
