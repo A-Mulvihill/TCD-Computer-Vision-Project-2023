@@ -8,4 +8,5 @@ log/
 *.pt
 *.pkl
 *.pb
+*.tflite
 variables.*
