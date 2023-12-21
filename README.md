@@ -22,7 +22,7 @@ See the [Tensorflow 2 installation documentation for your system](https://www.te
 ## Setup
 
 1. Clone this repository
-2. Using conda shell, create a new conda environment with `conda env create -f gpu.yml` OR `conda env create -f cpu.yml` depending on whether you want to use GPU or CPU.
+2. Using conda shell, navigate to the repository folder and create a new conda environment with `conda env create -f gpu.yml` OR `conda env create -f cpu.yml` depending on whether you want to use GPU or CPU.
 3. Activate the environment with `conda activate tfgpu` OR `conda activate tfcpu`
 4. Verify the conda environment with `conda env list` and `conda info`
 5. Verify CPU support with `python -c "import tensorflow as tf;print(tf.reduce_sum(tf.random.normal([1000, 1000])))"`
@@ -32,4 +32,41 @@ See the [Tensorflow 2 installation documentation for your system](https://www.te
 
 ## Training
 
+For preliminary Residual Learning training, run the following command:
+
+```pwsh
+python srmodel.py
+```
+
+Afterwards, run Quantization Aware Training by adding the `-q` flag to the previous command:
+
+```pwsh
+python srmodel.py -q
+```
+
+Finally, Quantize the model generating the mobile-ready .tflite file with the `-g` flag:
+
+```pwsh
+python srmodel.py -g
+```
+
+The above command also evaluates the model on the DIV2K validation set on yoour machine and prints the average PSNR score.
+
 ## Testing
+
+Test the model on a modern Android mobile device by copying the generated .tflite file to the phone, installing [AI Benchmark](https://play.google.com/store/apps/details?id=org.benchmark.demo&pcampaignid=web_share), entering "PRO MODE", selecting "CUSTOM MODEL", and selecting the .tflite file generated in the previous step. Our results are as follows:
+
+### AI Benchmark Options
+
+- Input values range (min / max): 0, 255
+- Inference Mode: INT8
+- \# of CPU Threads: 4
+- \# of Inferece Iterations: 100
+- Delay between Inference Iterations, ms: 0
+
+### Results (Snapdragon 888 on Asus ROG Phone 5)
+
+- `srmodel.py -g` PSNR: 29.98
+- AI Benchmark CPU Inference Time: 187ms
+- AI Benchmark GPU (TFLite GPU Delegate) Inference Time: 53.6ms
+- AI Benchmark Accelerator (Qualcomm QNN HTP) Inference Time: 10.5ms
