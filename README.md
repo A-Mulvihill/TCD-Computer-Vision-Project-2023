@@ -50,7 +50,7 @@ Finally, Quantize the model generating the mobile-ready .tflite file with the `-
 python srmodel.py -g
 ```
 
-The above command also evaluates the model on the DIV2K validation set on yoour machine and prints the average PSNR score.
+The above command also evaluates the model on the DIV2K validation set on your machine and prints the average PSNR score.
 
 ## Testing
 
