@@ -77,4 +77,3 @@ dependencies:
       - urllib3==2.1.0
       - werkzeug==3.0.1
       - wrapt==1.16.0
-prefix: C:\Users\Michael\miniconda3\envs\tfgpu
